@@ -1,5 +1,38 @@
-# Kohya's GUI
+# Kohya's GUI, but for Linux
 
+Everything WIP.
+Currently only blip captioning and Dreambooth LoRA without 8bit adam works.
+But I did not test everything, so no guarantee that it works!
+
+## Installation
+
+Open a terminal and execute the following commands:
+
+```bash
+git clone https://github.com/Thund3rPat/kohya_ss-linux.git
+cd kohya_ss-linux
+
+# tested on python 3.10, python 3.11 did not work for me!
+python3 -m venv venv
+source venv/bin/activate
+
+pip install torch torchvision
+pip install --use-pep517 --upgrade -r requirements.txt
+pip install xformers
+
+accelerate config
+```
+
+## Launching the GUI
+
+To run the GUI you simply use this command:
+
+```bash
+source venv/bin/activate
+python3 ./kohya_gui.py
+```
+
+## Old README - don't read any further
 This repository repository is providing a Windows focussed Gradio GUI for kohya's Stable Diffusion trainers found here: https://github.com/kohya-ss/sd-scripts. The GUI allow you to set the training parameters and generate and run the required CLI command to train the model.
 
 If you run on Linux and would like to use the GUI there is now a port of it as a docker container. You can find the project here: https://github.com/P2Enjoy/kohya_ss-docker
