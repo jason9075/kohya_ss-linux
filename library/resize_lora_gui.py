@@ -26,7 +26,7 @@ def resize_lora(
     if device == '':
         device = 'cuda'
 
-    run_cmd = f'.\\venv\Scripts\python.exe "networks\\resize_lora.py"'
+    run_cmd = f'python3 "networks/resize_lora.py"'
     run_cmd += f' --save_precision {save_precision}'
     run_cmd += f' --save_to {save_to}'
     run_cmd += f' --model {model}'
@@ -36,7 +36,7 @@ def resize_lora(
     print(run_cmd)
 
     # Run the command
-    subprocess.run(run_cmd)
+    subprocess.run(run_cmd, shell=True)
 
 
 ###

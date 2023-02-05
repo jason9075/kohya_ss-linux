@@ -1,3 +1,3 @@
 git pull
-.\venv\Scripts\activate
+source venv/bin/activate
 pip install --upgrade -r requirements.txt

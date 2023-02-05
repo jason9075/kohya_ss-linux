@@ -31,7 +31,7 @@ def extract_lora(
         msgbox('The provided base model is not a file')
         return
 
-    run_cmd = f'.\\venv\Scripts\python.exe "networks\extract_lora_from_models.py"'
+    run_cmd = f'python3 "networks/extract_lora_from_models.py"'
     run_cmd += f' --save_precision {save_precision}'
     run_cmd += f' --save_to "{save_to}"'
     run_cmd += f' --model_org "{model_org}"'
@@ -43,7 +43,7 @@ def extract_lora(
     print(run_cmd)
 
     # Run the command
-    subprocess.run(run_cmd)
+    subprocess.run(run_cmd, shell=True)
 
 
 ###

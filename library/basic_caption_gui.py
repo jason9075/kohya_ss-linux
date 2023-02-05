@@ -36,7 +36,7 @@ def caption_images(
         print(run_cmd)
 
         # Run the command
-        subprocess.run(run_cmd)
+        subprocess.run(run_cmd, shell=True)
 
     if overwrite_input:
         if not prefix=='' or not postfix=='':

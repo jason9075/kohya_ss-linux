@@ -254,7 +254,7 @@ def train_model(
             os.mkdir(train_dir)
 
         run_cmd = (
-            f'./venv/Scripts/python.exe finetune/merge_captions_to_metadata.py'
+            f'python3 finetune/merge_captions_to_metadata.py'
         )
         if caption_extension == '':
             run_cmd += f' --caption_extension=".caption"'
@@ -268,12 +268,12 @@ def train_model(
         print(run_cmd)
 
         # Run the command
-        subprocess.run(run_cmd)
+        subprocess.run(run_cmd, shell=True)
 
     # create images buckets
     if generate_image_buckets:
         run_cmd = (
-            f'./venv/Scripts/python.exe finetune/prepare_buckets_latents.py'
+            f'python3 finetune/prepare_buckets_latents.py'
         )
         run_cmd += f' "{image_folder}"'
         run_cmd += f' "{train_dir}/{caption_metadata_filename}"'
@@ -292,7 +292,7 @@ def train_model(
         print(run_cmd)
 
         # Run the command
-        subprocess.run(run_cmd)
+        subprocess.run(run_cmd, shell=True)
 
     image_num = len(
         [f for f in os.listdir(image_folder) if f.endswith('.jpg') or f.endswith('.png') or f.endswith('.webp')]
@@ -390,7 +390,7 @@ def train_model(
 
     print(run_cmd)
     # Run the command
-    subprocess.run(run_cmd)
+    subprocess.run(run_cmd, shell=True)
 
     # check if output_dir/last is a folder... therefore it is a diffuser model
     last_dir = pathlib.Path(f'{output_dir}/{output_name}')
