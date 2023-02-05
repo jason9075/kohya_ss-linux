@@ -23,13 +23,13 @@ def verify_lora(
         msgbox('The provided model A is not a file')
         return
 
-    run_cmd = f'.\\venv\Scripts\python.exe "networks\check_lora_weights.py"'
+    run_cmd = f'python3 "networks/check_lora_weights.py"'
     run_cmd += f' {lora_model}'
 
     print(run_cmd)
 
     # Run the command
-    subprocess.run(run_cmd)
+    subprocess.run(run_cmd, shell=True)
     process = subprocess.Popen(run_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, error = process.communicate()
     

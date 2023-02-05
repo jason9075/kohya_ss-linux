@@ -34,7 +34,7 @@ def merge_lora(
     ratio_a = ratio
     ratio_b = 1 - ratio
 
-    run_cmd = f'.\\venv\Scripts\python.exe "networks\merge_lora.py"'
+    run_cmd = f'python3 "networks/merge_lora.py"'
     run_cmd += f' --save_precision {save_precision}'
     run_cmd += f' --precision {precision}'
     run_cmd += f' --save_to {save_to}'
@@ -44,7 +44,7 @@ def merge_lora(
     print(run_cmd)
 
     # Run the command
-    subprocess.run(run_cmd)
+    subprocess.run(run_cmd, shell=True)
 
 
 ###
