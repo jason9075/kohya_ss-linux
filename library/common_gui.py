@@ -542,7 +542,7 @@ def gradio_advanced_training():
             label='Memory efficient attention', value=False
         )
     with gr.Row():
-        use_8bit_adam = gr.Checkbox(label='Use 8bit adam (not working)', value=False)
+        use_8bit_adam = gr.Checkbox(label='Use 8bit adam', value=False)
         xformers = gr.Checkbox(label='Use xformers', value=True)
         color_aug = gr.Checkbox(
             label='Color augmentation', value=False

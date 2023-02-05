@@ -1,7 +1,7 @@
 # Kohya's GUI, but for Linux
 
 Everything WIP.
-Currently captioning and Dreambooth/LoRA/TI without 8bit adam works.
+Currently captioning and Dreambooth/LoRA/TI works.
 But I did not test everything, so no guarantee!
 
 ## Installation
