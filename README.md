@@ -1,8 +1,8 @@
 # Kohya's GUI, but for Linux
 
 Everything WIP.
-Currently only blip captioning and Dreambooth LoRA without 8bit adam works.
-But I did not test everything, so no guarantee that it works!
+Currently captioning and Dreambooth/LoRA/TI without 8bit adam works.
+But I did not test everything, so no guarantee!
 
 ## Installation
 
@@ -30,6 +30,14 @@ To run the GUI you simply use this command:
 ```bash
 source venv/bin/activate
 python3 ./kohya_gui.py
+```
+
+## Upgrade
+
+When a new release comes out you can upgrade your repo with the following command:
+
+```bash
+./upgrade.sh
 ```
 
 ## Old README - don't read any further
