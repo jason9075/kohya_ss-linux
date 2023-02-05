@@ -16,9 +16,7 @@ cd kohya_ss-linux
 python3 -m venv venv
 source venv/bin/activate
 
-pip install torch torchvision
 pip install --use-pep517 --upgrade -r requirements.txt
-pip install xformers
 
 accelerate config
 ```
