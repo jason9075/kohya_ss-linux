@@ -1,7 +1,7 @@
 # Kohya's GUI, but for Linux
 
 Everything WIP.
-Currently captioning and Dreambooth/LoRA/TI without 8bit adam works.
+Currently captioning and Dreambooth/LoRA/TI works.
 But I did not test everything, so no guarantee!
 
 ## Installation
@@ -16,9 +16,7 @@ cd kohya_ss-linux
 python3 -m venv venv
 source venv/bin/activate
 
-pip install torch torchvision
 pip install --use-pep517 --upgrade -r requirements.txt
-pip install xformers
 
 accelerate config
 ```
