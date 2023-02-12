@@ -34,7 +34,7 @@ def verify_lora(
 
     # Run the command
     subprocess.run(run_cmd, shell=True)
-    process = subprocess.Popen(run_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(run_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     output, error = process.communicate()
 
     return (output.decode(), error.decode())
