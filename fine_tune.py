@@ -14,6 +14,9 @@ from diffusers import DDPMScheduler
 
 import library.train_util as train_util
 
+import torch.optim as optim
+import dadaptation
+
 
 def collate_fn(examples):
   return examples[0]
@@ -158,11 +161,20 @@ def train(args):
       raise ImportError("No bitsand bytes / bitsandbytesがインストールされていないようです")
     print("use 8-bit Adam optimizer")
     optimizer_class = bnb.optim.AdamW8bit
+  elif args.use_lion_optimizer:
+    try:
+      import lion_pytorch
+    except ImportError:
+      raise ImportError("No lion_pytorch / lion_pytorch がインストールされていないようです")
+    print("use Lion optimizer")
+    optimizer_class = lion_pytorch.Lion
   else:
     optimizer_class = torch.optim.AdamW
 
   # betaやweight decayはdiffusers DreamBoothもDreamBooth SDもデフォルト値のようなのでオプションはとりあえず省略
-  optimizer = optimizer_class(params_to_optimize, lr=args.learning_rate)
+  # optimizer = optimizer_class(params_to_optimize, lr=args.learning_rate)
+  print('enable dadatation.')
+  optimizer = dadaptation.DAdaptAdam(params_to_optimize, lr=1.0, decouple=True, weight_decay=0)
 
   # dataloaderを準備する
   # DataLoaderのプロセス数：0はメインプロセスになる
@@ -176,8 +188,20 @@ def train(args):
     print(f"override steps. steps for {args.max_train_epochs} epochs is / 指定エポックまでのステップ数: {args.max_train_steps}")
 
   # lr schedulerを用意する
-  lr_scheduler = diffusers.optimization.get_scheduler(
-      args.lr_scheduler, optimizer, num_warmup_steps=args.lr_warmup_steps, num_training_steps=args.max_train_steps * args.gradient_accumulation_steps)
+  # lr_scheduler = diffusers.optimization.get_scheduler(
+  #     args.lr_scheduler, optimizer, num_warmup_steps=args.lr_warmup_steps, num_training_steps=args.max_train_steps * args.gradient_accumulation_steps)
+
+  # For Adam
+  # lr_scheduler = optim.lr_scheduler.LambdaLR(optimizer=optimizer,
+  #                                       lr_lambda=[lambda epoch: 1],
+  #                                       last_epoch=-1,
+  #                                       verbose=False)
+  
+  # For SGD optim
+  lr_scheduler = optim.lr_scheduler.LambdaLR(optimizer=optimizer,
+                                        lr_lambda=[lambda epoch: 1],
+                                        last_epoch=-1,
+                                        verbose=True)
 
   # 実験的機能：勾配も含めたfp16学習を行う　モデル全体をfp16にする
   if args.full_fp16:
@@ -255,6 +279,9 @@ def train(args):
 
         # Sample noise that we'll add to the latents
         noise = torch.randn_like(latents, device=latents.device)
+        if args.noise_offset:
+          # https://www.crosslabs.org//blog/diffusion-with-offset-noise
+          noise += args.noise_offset * torch.randn((latents.shape[0], latents.shape[1], 1, 1), device=latents.device)
 
         # Sample a random timestep for each image
         timesteps = torch.randint(0, noise_scheduler.config.num_train_timesteps, (b_size,), device=latents.device)
@@ -293,12 +320,16 @@ def train(args):
 
       current_loss = loss.detach().item()        # 平均なのでbatch sizeは関係ないはず
       if args.logging_dir is not None:
-        logs = {"loss": current_loss, "lr": lr_scheduler.get_last_lr()[0]}
+        # logs = {"loss": current_loss, "lr": lr_scheduler.get_last_lr()[0]}
+        # accelerator.log(logs, step=global_step)
+        logs = {"loss": current_loss, "dlr": optimizer.param_groups[0]['d']*optimizer.param_groups[0]['lr']}
         accelerator.log(logs, step=global_step)
 
       loss_total += current_loss
       avr_loss = loss_total / (step+1)
-      logs = {"loss": avr_loss}  # , "lr": lr_scheduler.get_last_lr()[0]}
+      # logs = {"loss": avr_loss}  # , "lr": lr_scheduler.get_last_lr()[0]}
+      # progress_bar.set_postfix(**logs)
+      logs = {"avg_loss": avr_loss, "dlr": optimizer.param_groups[0]['d']*optimizer.param_groups[0]['lr']}  # , "lr": lr_scheduler.get_last_lr()[0]}
       progress_bar.set_postfix(**logs)
 
       if global_step >= args.max_train_steps:
