@@ -17,6 +17,7 @@ torch==1.13.1
 torchvision==0.14.1
 triton
 lion-pytorch==0.0.6
+dadaptation==1.5
 # for BLIP captioning
 requests==2.28.2
 timm==0.6.12
