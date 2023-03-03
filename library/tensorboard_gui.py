@@ -14,7 +14,7 @@ def start_tensorboard(logging_dir):
         msgbox(msg="Error: log folder is empty")
         return
     
-    run_cmd = f'tensorboard.exe --logdir "{logging_dir}"'
+    run_cmd = f'tensorboard --logdir "{logging_dir}"'
     
     print(run_cmd)
     if tensorboard_proc is not None:
@@ -23,7 +23,7 @@ def start_tensorboard(logging_dir):
     
     # Start background process
     print('Starting tensorboard...')    
-    tensorboard_proc = subprocess.Popen(run_cmd)
+    tensorboard_proc = subprocess.Popen(run_cmd, shell=True)
     
     # Wait for some time to allow TensorBoard to start up
     time.sleep(5)
