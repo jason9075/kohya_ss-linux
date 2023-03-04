@@ -46,6 +46,8 @@ folder_symbol = '\U0001f4c2'  # 📂
 refresh_symbol = '\U0001f504'  # 🔄
 save_style_symbol = '\U0001f4be'  # 💾
 document_symbol = '\U0001F4C4'   # 📄
+path_of_this_folder = os.getcwd()
+
 
 def save_configuration(
     save_as,
@@ -105,9 +107,14 @@ def save_configuration(
     bucket_no_upscale,
     random_crop,
     bucket_reso_steps,
-    caption_dropout_every_n_epochs, caption_dropout_rate,
+    caption_dropout_every_n_epochs,
+    caption_dropout_rate,
     optimizer,
-    optimizer_args,noise_offset,
+    optimizer_args,
+    noise_offset,
+    LoRA_type='Standard',
+    conv_dim=0,
+    conv_alpha=0,
 ):
     # Get list of function parameters and values
     parameters = list(locals().items())
@@ -211,9 +218,14 @@ def open_configuration(
     bucket_no_upscale,
     random_crop,
     bucket_reso_steps,
-    caption_dropout_every_n_epochs, caption_dropout_rate,
+    caption_dropout_every_n_epochs,
+    caption_dropout_rate,
     optimizer,
-    optimizer_args,noise_offset,
+    optimizer_args,
+    noise_offset,
+    LoRA_type='Standard',
+    conv_dim=0,
+    conv_alpha=0,
 ):
     # Get list of function parameters and values
     parameters = list(locals().items())
@@ -237,7 +249,13 @@ def open_configuration(
         # Set the value in the dictionary to the corresponding value in `my_data`, or the default value if not found
         if not key in ['file_path']:
             values.append(my_data.get(key, value))
-            
+
+    # This next section is about making the LoCon parameters visible if LoRA_type = 'Standard'
+    if my_data.get('LoRA_type', 'Standard') == 'LoCon':
+        values.append(gr.Row.update(visible=True))
+    else:
+        values.append(gr.Row.update(visible=False))
+
     return tuple(values)
 
 
@@ -297,10 +315,15 @@ def train_model(
     bucket_no_upscale,
     random_crop,
     bucket_reso_steps,
-    caption_dropout_every_n_epochs, caption_dropout_rate,
+    caption_dropout_every_n_epochs,
+    caption_dropout_rate,
     optimizer,
-    optimizer_args,noise_offset,
-):  
+    optimizer_args,
+    noise_offset,
+    LoRA_type,
+    conv_dim,
+    conv_alpha,
+):
     if pretrained_model_name_or_path == '':
         msgbox('Source model information is missing')
         return
@@ -435,7 +458,18 @@ def train_model(
         run_cmd += f' --save_model_as={save_model_as}'
     if not float(prior_loss_weight) == 1.0:
         run_cmd += f' --prior_loss_weight={prior_loss_weight}'
-    run_cmd += f' --network_module=networks.lora'
+    if LoRA_type == 'LoCon':
+        try:
+            import locon.locon_kohya
+        except ModuleNotFoundError:
+            print("\033[1;31mError:\033[0m The required module 'locon' is not installed. Please install by running \033[33mupgrade.ps1\033[0m before running this program.")
+            return
+        run_cmd += f' --network_module=locon.locon_kohya'
+        run_cmd += (
+            f' --network_args "conv_dim={conv_dim}" "conv_alpha={conv_alpha}"'
+        )
+    else:
+        run_cmd += f' --network_module=networks.lora'
 
     if not (float(text_encoder_lr) == 0) or not (float(unet_lr) == 0):
         if not (float(text_encoder_lr) == 0) and not (float(unet_lr) == 0):
@@ -609,6 +643,14 @@ def lora_tab(
         )
     with gr.Tab('Training parameters'):
         with gr.Row():
+            LoRA_type = gr.Dropdown(
+                label='LoRA type',
+                choices=[
+                    'Standard',
+                    'LoCon',
+                ],
+                value='Standard',
+            )
             lora_network_weights = gr.Textbox(
                 label='LoRA network weights',
                 placeholder='{Optional) Path to existing LoRA network weights to resume training',
@@ -641,6 +683,7 @@ def lora_tab(
             lr_scheduler_value='cosine',
             lr_warmup_value='10',
         )
+
         with gr.Row():
             text_encoder_lr = gr.Textbox(
                 label='Text Encoder learning rate',
@@ -653,21 +696,50 @@ def lora_tab(
                 placeholder='Optional',
             )
             network_dim = gr.Slider(
-                minimum=4,
+                minimum=1,
                 maximum=1024,
                 label='Network Rank (Dimension)',
                 value=8,
-                step=4,
+                step=1,
                 interactive=True,
             )
             network_alpha = gr.Slider(
-                minimum=4,
+                minimum=1,
                 maximum=1024,
                 label='Network Alpha',
                 value=1,
-                step=4,
+                step=1,
                 interactive=True,
             )
+
+        with gr.Row(visible=False) as LoCon_row:
+
+            # locon= gr.Checkbox(label='Train a LoCon instead of a general LoRA (does not support v2 base models) (may not be able to some utilities now)', value=False)
+            conv_dim = gr.Slider(
+                minimum=1,
+                maximum=512,
+                value=1,
+                step=1,
+                label='LoCon Convolution Rank (Dimension)',
+            )
+            conv_alpha = gr.Slider(
+                minimum=1,
+                maximum=512,
+                value=1,
+                step=1,
+                label='LoCon Convolution Alpha',
+            )
+        # Show of hide LoCon conv settings depending on LoRA type selection
+        def LoRA_type_change(LoRA_type):
+            print('LoRA type changed...')
+            if LoRA_type == 'LoCon':
+                return gr.Group.update(visible=True)
+            else:
+                return gr.Group.update(visible=False)
+            
+        LoRA_type.change(
+            LoRA_type_change, inputs=[LoRA_type], outputs=[LoCon_row]
+        )
         with gr.Row():
             max_resolution = gr.Textbox(
                 label='Max resolution',
@@ -723,14 +795,16 @@ def lora_tab(
                 bucket_no_upscale,
                 random_crop,
                 bucket_reso_steps,
-                caption_dropout_every_n_epochs, caption_dropout_rate,noise_offset,
+                caption_dropout_every_n_epochs,
+                caption_dropout_rate,
+                noise_offset,
             ) = gradio_advanced_training()
             color_aug.change(
                 color_aug_changed,
                 inputs=[color_aug],
                 outputs=[cache_latents],
             )
-        
+
         optimizer.change(
             set_legacy_8bitadam,
             inputs=[optimizer, use_8bit_adam],
@@ -753,15 +827,15 @@ def lora_tab(
         gradio_verify_lora_tab()
 
     button_run = gr.Button('Train model', variant='primary')
-    
+
     # Setup gradio tensorboard buttons
     button_start_tensorboard, button_stop_tensorboard = gradio_tensorboard()
-    
+
     button_start_tensorboard.click(
         start_tensorboard,
         inputs=logging_dir,
     )
-    
+
     button_stop_tensorboard.click(
         stop_tensorboard,
     )
@@ -822,15 +896,20 @@ def lora_tab(
         bucket_no_upscale,
         random_crop,
         bucket_reso_steps,
-        caption_dropout_every_n_epochs, caption_dropout_rate,
+        caption_dropout_every_n_epochs,
+        caption_dropout_rate,
         optimizer,
-        optimizer_args,noise_offset,
+        optimizer_args,
+        noise_offset,
+        LoRA_type,
+        conv_dim,
+        conv_alpha,
     ]
 
     button_open_config.click(
         open_configuration,
         inputs=[config_file_name] + settings_list,
-        outputs=[config_file_name] + settings_list,
+        outputs=[config_file_name] + settings_list + [LoCon_row],
     )
 
     button_save_config.click(
@@ -886,16 +965,19 @@ def UI(**kwargs):
             )
 
     # Show the interface
-    launch_kwargs={}
+    launch_kwargs = {}
     if not kwargs.get('username', None) == '':
-        launch_kwargs["auth"] = (kwargs.get('username', None), kwargs.get('password', None))
+        launch_kwargs['auth'] = (
+            kwargs.get('username', None),
+            kwargs.get('password', None),
+        )
     if kwargs.get('server_port', 0) > 0:
-        launch_kwargs["server_port"] = kwargs.get('server_port', 0)
-    if kwargs.get('inbrowser', False):        
-        launch_kwargs["inbrowser"] = kwargs.get('inbrowser', False)
+        launch_kwargs['server_port'] = kwargs.get('server_port', 0)
+    if kwargs.get('inbrowser', False):
+        launch_kwargs['inbrowser'] = kwargs.get('inbrowser', False)
     print(launch_kwargs)
     interface.launch(**launch_kwargs)
-        
+
 
 if __name__ == '__main__':
     # torch.cuda.set_per_process_memory_fraction(0.48)
@@ -907,10 +989,20 @@ if __name__ == '__main__':
         '--password', type=str, default='', help='Password for authentication'
     )
     parser.add_argument(
-        '--server_port', type=int, default=0, help='Port to run the server listener on'
+        '--server_port',
+        type=int,
+        default=0,
+        help='Port to run the server listener on',
     )
-    parser.add_argument("--inbrowser", action="store_true", help="Open in browser")
+    parser.add_argument(
+        '--inbrowser', action='store_true', help='Open in browser'
+    )
 
     args = parser.parse_args()
 
-    UI(username=args.username, password=args.password, inbrowser=args.inbrowser, server_port=args.server_port)
+    UI(
+        username=args.username,
+        password=args.password,
+        inbrowser=args.inbrowser,
+        server_port=args.server_port,
+    )
