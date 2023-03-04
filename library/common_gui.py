@@ -9,6 +9,7 @@ refresh_symbol = '\U0001f504'  # 🔄
 save_style_symbol = '\U0001f4be'  # 💾
 document_symbol = '\U0001F4C4'   # 📄
 
+
 def update_optimizer(my_data):
     if my_data.get('use_8bit_adam', False):
         my_data['optimizer'] = 'AdamW8bit'
@@ -86,13 +87,18 @@ def remove_doublequote(file_path):
 
     return file_path
 
+
 def set_legacy_8bitadam(optimizer, use_8bit_adam):
     if optimizer == 'AdamW8bit':
         # use_8bit_adam = True
-        return gr.Dropdown.update(value=optimizer), gr.Checkbox.update(value=True, interactive=False, visible=True)
+        return gr.Dropdown.update(value=optimizer), gr.Checkbox.update(
+            value=True, interactive=False, visible=True
+        )
     else:
         # use_8bit_adam = False
-        return gr.Dropdown.update(value=optimizer), gr.Checkbox.update(value=False, interactive=False, visible=True)
+        return gr.Dropdown.update(value=optimizer), gr.Checkbox.update(
+            value=False, interactive=False, visible=True
+        )
 
 
 def get_folder_path(folder_path=''):
@@ -266,7 +272,7 @@ def save_inference_file(output_dir, v2, v_parameterization, output_name):
                     )
 
 
-def set_pretrained_model_name_or_path_input(value, v2, v_parameterization):
+def set_pretrained_model_name_or_path_input(model_list, pretrained_model_name_or_path, v2, v_parameterization):
     # define a list of substrings to search for
     substrings_v2 = [
         'stabilityai/stable-diffusion-2-1-base',
@@ -274,12 +280,12 @@ def set_pretrained_model_name_or_path_input(value, v2, v_parameterization):
     ]
 
     # check if $v2 and $v_parameterization are empty and if $pretrained_model_name_or_path contains any of the substrings in the v2 list
-    if str(value) in substrings_v2:
+    if str(model_list) in substrings_v2:
         print('SD v2 model detected. Setting --v2 parameter')
         v2 = True
         v_parameterization = False
 
-        return value, v2, v_parameterization
+        return model_list, v2, v_parameterization
 
     # define a list of substrings to search for v-objective
     substrings_v_parameterization = [
@@ -288,14 +294,14 @@ def set_pretrained_model_name_or_path_input(value, v2, v_parameterization):
     ]
 
     # check if $v2 and $v_parameterization are empty and if $pretrained_model_name_or_path contains any of the substrings in the v_parameterization list
-    if str(value) in substrings_v_parameterization:
+    if str(model_list) in substrings_v_parameterization:
         print(
             'SD v2 v_parameterization detected. Setting --v2 parameter and --v_parameterization'
         )
         v2 = True
         v_parameterization = True
 
-        return value, v2, v_parameterization
+        return model_list, v2, v_parameterization
 
     # define a list of substrings to v1.x
     substrings_v1_model = [
@@ -303,18 +309,18 @@ def set_pretrained_model_name_or_path_input(value, v2, v_parameterization):
         'runwayml/stable-diffusion-v1-5',
     ]
 
-    if str(value) in substrings_v1_model:
+    if str(model_list) in substrings_v1_model:
         v2 = False
         v_parameterization = False
 
-        return value, v2, v_parameterization
+        return model_list, v2, v_parameterization
 
-    if value == 'custom':
-        value = ''
-        v2 = False
-        v_parameterization = False
-
-        return value, v2, v_parameterization
+    if model_list == 'custom':
+        if str(pretrained_model_name_or_path) in substrings_v1_model or str(pretrained_model_name_or_path) in substrings_v2 or str(pretrained_model_name_or_path) in substrings_v_parameterization:
+            pretrained_model_name_or_path = ''
+            v2 = False
+            v_parameterization = False
+        return pretrained_model_name_or_path, v2, v_parameterization
 
     ###
     ### Gradio common GUI section
@@ -349,6 +355,7 @@ def gradio_source_model():
             pretrained_model_name_or_path = gr.Textbox(
                 label='Pretrained model name or path',
                 placeholder='enter the path to custom model or name of pretrained model',
+                value='runwayml/stable-diffusion-v1-5'
             )
             pretrained_model_name_or_path_file = gr.Button(
                 document_symbol, elem_id='open_folder_small'
@@ -367,7 +374,7 @@ def gradio_source_model():
                 outputs=pretrained_model_name_or_path,
             )
             model_list = gr.Dropdown(
-                label='(Optional) Model Quick Pick',
+                label='Model Quick Pick',
                 choices=[
                     'custom',
                     'stabilityai/stable-diffusion-2-1-base',
@@ -377,6 +384,7 @@ def gradio_source_model():
                     'runwayml/stable-diffusion-v1-5',
                     'CompVis/stable-diffusion-v1-4',
                 ],
+                value='runwayml/stable-diffusion-v1-5'
             )
             save_model_as = gr.Dropdown(
                 label='Save trained model as',
@@ -391,13 +399,13 @@ def gradio_source_model():
             )
 
         with gr.Row():
-            v2 = gr.Checkbox(label='v2', value=True)
+            v2 = gr.Checkbox(label='v2', value=False)
             v_parameterization = gr.Checkbox(
                 label='v_parameterization', value=False
             )
         model_list.change(
             set_pretrained_model_name_or_path_input,
-            inputs=[model_list, v2, v_parameterization],
+            inputs=[model_list, pretrained_model_name_or_path, v2, v_parameterization],
             outputs=[
                 pretrained_model_name_or_path,
                 v2,
@@ -489,14 +497,15 @@ def gradio_training(
                 'DAdaptation',
                 'Lion',
                 'SGDNesterov',
-                'SGDNesterov8bit'
+                'SGDNesterov8bit',
             ],
-            value="AdamW8bit",
+            value='AdamW8bit',
             interactive=True,
         )
     with gr.Row():
         optimizer_args = gr.Textbox(
-            label='Optimizer extra arguments', placeholder='(Optional) eg: relative_step=True scale_parameter=True warmup_init=True'
+            label='Optimizer extra arguments',
+            placeholder='(Optional) eg: relative_step=True scale_parameter=True warmup_init=True',
         )
     return (
         learning_rate,
@@ -549,10 +558,13 @@ def run_cmd_training(**kwargs):
         ' --cache_latents' if kwargs.get('cache_latents') else '',
         # ' --use_lion_optimizer' if kwargs.get('optimizer') == 'Lion' else '',
         f' --optimizer_type="{kwargs.get("optimizer", "AdamW")}"',
-        f' --optimizer_args {kwargs.get("optimizer_args", "")}' if not kwargs.get('optimizer_args') == '' else '',
+        f' --optimizer_args {kwargs.get("optimizer_args", "")}'
+        if not kwargs.get('optimizer_args') == ''
+        else '',
     ]
     run_cmd = ''.join(options)
     return run_cmd
+
 
 # # This function takes a dictionary of keyword arguments and returns a string that can be used to run a command-line training script
 # def run_cmd_training(**kwargs):
@@ -611,7 +623,9 @@ def gradio_advanced_training():
         )
     with gr.Row():
         # This use_8bit_adam element should be removed in a future release as it is no longer used
-        use_8bit_adam = gr.Checkbox(label='Use 8bit adam', value=False, visible=False)
+        use_8bit_adam = gr.Checkbox(
+            label='Use 8bit adam', value=False, visible=False
+        )
         xformers = gr.Checkbox(label='Use xformers', value=True)
         color_aug = gr.Checkbox(label='Color augmentation', value=False)
         flip_aug = gr.Checkbox(label='Flip augmentation', value=False)
@@ -628,17 +642,13 @@ def gradio_advanced_training():
         noise_offset = gr.Textbox(
             label='Noise offset (0 - 1)', placeholder='(Oprional) eg: 0.1'
         )
-        
+
     with gr.Row():
         caption_dropout_every_n_epochs = gr.Number(
-            label="Dropout caption every n epochs",
-            value=0
+            label='Dropout caption every n epochs', value=0
         )
         caption_dropout_rate = gr.Slider(
-            label="Rate of caption dropout",
-            value=0,
-            minimum=0,
-            maximum=1
+            label='Rate of caption dropout', value=0, minimum=0, maximum=1
         )
     with gr.Row():
         save_state = gr.Checkbox(label='Save training state', value=False)
@@ -676,7 +686,9 @@ def gradio_advanced_training():
         bucket_no_upscale,
         random_crop,
         bucket_reso_steps,
-        caption_dropout_every_n_epochs, caption_dropout_rate,noise_offset,
+        caption_dropout_every_n_epochs,
+        caption_dropout_rate,
+        noise_offset,
     )
 
 
@@ -706,11 +718,9 @@ def run_cmd_advanced_training(**kwargs):
         f' --caption_dropout_rate="{kwargs.get("caption_dropout_rate", "")}"'
         if float(kwargs.get('caption_dropout_rate', 0)) > 0
         else '',
-        
         f' --bucket_reso_steps={int(kwargs.get("bucket_reso_steps", 1))}'
         if int(kwargs.get('bucket_reso_steps', 64)) >= 1
         else '',
-        
         ' --save_state' if kwargs.get('save_state') else '',
         ' --mem_eff_attn' if kwargs.get('mem_eff_attn') else '',
         ' --color_aug' if kwargs.get('color_aug') else '',
@@ -733,6 +743,7 @@ def run_cmd_advanced_training(**kwargs):
     ]
     run_cmd = ''.join(options)
     return run_cmd
+
 
 # def run_cmd_advanced_training(**kwargs):
 #     arg_map = {

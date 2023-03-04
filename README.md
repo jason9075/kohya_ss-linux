@@ -45,21 +45,21 @@ If you run on Linux and would like to use the GUI, there is now a port of it as 
 
 ### Table of Contents
 
-- [Tutorials](https://github.com/jonathanzhang53/kohya_ss#tutorials)
-- [Required Dependencies](https://github.com/jonathanzhang53/kohya_ss#required-dependencies)
-- [Installation](https://github.com/jonathanzhang53/kohya_ss#installation)
-    - [CUDNN 8.6](https://github.com/jonathanzhang53/kohya_ss#optional-cudnn-86)
-- [Upgrading](https://github.com/jonathanzhang53/kohya_ss#upgrading)
-- [Launching the GUI](https://github.com/jonathanzhang53/kohya_ss#launching-the-gui)
-- [Dreambooth](https://github.com/jonathanzhang53/kohya_ss#dreambooth)
-- [Finetune](https://github.com/jonathanzhang53/kohya_ss#finetune)
-- [Train Network](https://github.com/jonathanzhang53/kohya_ss#train-network)
-- [LoRA](https://github.com/jonathanzhang53/kohya_ss#lora)
-- [Troubleshooting](https://github.com/jonathanzhang53/kohya_ss#troubleshooting)
-  - [Page File Limit](https://github.com/jonathanzhang53/kohya_ss#page-file-limit)
-  - [No module called tkinter](https://github.com/jonathanzhang53/kohya_ss#no-module-called-tkinter)
-  - [FileNotFoundError](https://github.com/jonathanzhang53/kohya_ss#filenotfounderror)
-- [Change History](https://github.com/jonathanzhang53/kohya_ss#change-history)
+- [Tutorials](https://github.com/bmaltais/kohya_ss#tutorials)
+- [Required Dependencies](https://github.com/bmaltais/kohya_ss#required-dependencies)
+- [Installation](https://github.com/bmaltais/kohya_ss#installation)
+    - [CUDNN 8.6](https://github.com/bmaltais/kohya_ss#optional-cudnn-86)
+- [Upgrading](https://github.com/bmaltais/kohya_ss#upgrading)
+- [Launching the GUI](https://github.com/bmaltais/kohya_ss#launching-the-gui)
+- [Dreambooth](https://github.com/bmaltais/kohya_ss#dreambooth)
+- [Finetune](https://github.com/bmaltais/kohya_ss#finetune)
+- [Train Network](https://github.com/bmaltais/kohya_ss#train-network)
+- [LoRA](https://github.com/bmaltais/kohya_ss#lora)
+- [Troubleshooting](https://github.com/bmaltais/kohya_ss#troubleshooting)
+  - [Page File Limit](https://github.com/bmaltais/kohya_ss#page-file-limit)
+  - [No module called tkinter](https://github.com/bmaltais/kohya_ss#no-module-called-tkinter)
+  - [FileNotFoundError](https://github.com/bmaltais/kohya_ss#filenotfounderror)
+- [Change History](https://github.com/bmaltais/kohya_ss#change-history)
 
 ## Tutorials
 
@@ -202,6 +202,13 @@ This will store your a backup file with your current locally installed pip packa
 
 ## Change History
 
+* 2023/03/03 (v21.1.2):
+    - Fix issue https://github.com/bmaltais/kohya_ss/issues/277
+    - Fix issue https://github.com/bmaltais/kohya_ss/issues/278 introduce by LoCon project switching to pip module. Make sure to run upgrade.ps1 to install the latest pip requirements for LoCon support.
+* 2023/03/02 (v21.1.1):
+    - Emergency fix for https://github.com/bmaltais/kohya_ss/issues/261
+* 2023/03/02 (v21.1.0):
+    - Add LoCon support (https://github.com/KohakuBlueleaf/LoCon.git) to the Dreambooth LoRA tab. This will allow to create a new type of LoRA that include conv layers as part of the LoRA... hence the name LoCon. LoCon will work with the native Auto1111 implementation of LoRA. If you want to use it with the Kohya_ss additionalNetwork you will need to install this other extension... until Kohya_ss support it nativelly: https://github.com/KohakuBlueleaf/a1111-sd-webui-locon
 * 2023/03/01 (v21.0.1):
     - Add warning to tensorboard start if the log information is missing
     - Fix issue with 8bitadam on older config file load
