@@ -1,5 +1,9 @@
 # Kohya's GUI, but for Linux
 
+The Upstream Repo supports Linux now! No need to use this fork anymore!
+----
+I will achieve this soon.
+
 Everything WIP.
 Currently captioning and Dreambooth/LoRA/TI works.
 But I did not test everything, so no guarantee!
