@@ -2,7 +2,7 @@
 
 The Upstream Repo supports Linux now! No need to use this fork anymore!
 ----
-I will achieve this soon.
+I will archive this soon.
 
 Everything WIP.
 Currently captioning and Dreambooth/LoRA/TI works.
